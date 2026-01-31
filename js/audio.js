@@ -33,23 +33,20 @@ export function createAudioController(ui) {
     ui.bgm.load();
   }
 
-  // ✅ تُستدعى داخل click gesture (زر "دخول") لتفكيك سياسة المتصفح
+  // تُستدعى داخل click gesture (زر "دخول")
   async function unlockAndStart(src) {
     unlocked = true;
     setTrack(src);
     ui.bgm.volume = 1;
-    // محاولة تشغيل مباشرة داخل نفس الـ gesture
-    await playSafe();
+    await playSafe(); // تشغيل فوري
   }
 
-  // ✅ تغيير تراك بدون قطع التشغيل: لو كان شغال نخليه يفضل شغال
+  // تغيير تراك بدون قطع التشغيل
   async function switchTrackKeepPlaying(src) {
     const wasPlaying = unlocked && !ui.bgm.paused && !ui.bgm.ended;
     setTrack(src);
 
-    // لو كان شغال أو المستخدم فاتح الصوت: شغّله تاني بعد load
     if (unlocked && wantsAudio && wasPlaying) {
-      // microtask لتجنب سباق load
       await new Promise(r => setTimeout(r, 0));
       await playSafe();
     }
@@ -61,7 +58,6 @@ export function createAudioController(ui) {
       ui.bgm.pause();
       setUiPlaying(false);
     } else {
-      // لو unlocked نقدر نشغله فورًا
       if (unlocked) playSafe();
       else setUiPlaying(false);
     }

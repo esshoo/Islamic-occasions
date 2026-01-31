@@ -48,13 +48,6 @@ export function showMain(ui) {
   }, 260);
 }
 
-export function setCountdown(ui, { days, hrs, mins, secs }) {
-  ui.dEl.textContent = String(days);
-  ui.hEl.textContent = String(hrs);
-  ui.mEl.textContent = String(mins);
-  ui.sEl.textContent = String(secs);
-}
-
 export function msToParts(ms) {
   const sec = Math.max(0, Math.floor(ms / 1000));
   const days = Math.floor(sec / 86400);
@@ -62,4 +55,11 @@ export function msToParts(ms) {
   const mins = Math.floor((sec % 3600) / 60);
   const secs = sec % 60;
   return { days, hrs, mins, secs };
+}
+
+export function setCountdown(ui, { days, hrs, mins, secs }) {
+  ui.dEl.textContent = String(days);
+  ui.hEl.textContent = String(hrs);
+  ui.mEl.textContent = String(mins);
+  ui.sEl.textContent = String(secs);
 }

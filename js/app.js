@@ -17,10 +17,10 @@ function getGateGreetingText(mode){
   if (mode === "eid-fitr") return "كل عيد فطر وأنتم بخير";
   if (mode === "eid-adha") return "كل عيد أضحى وأنتم بخير";
 
-  // رمضان الحالي أو القادم
+  // Ramadan current/upcoming
   if (mode === "ramadan" || mode === "countdown-ramadan") return "كل رمضان وأنتم بخير";
 
-  // بين الفطر والأضحى: القادم الأضحى
+  // Between Fitr and Adha: upcoming is Adha
   if (mode === "countdown-adha") return "كل عيد أضحى وأنتم بخير";
 
   return "كل عام وأنتم بخير";
@@ -30,8 +30,8 @@ function setGateHeadline(mode){
   if (ui.gateHeadline) ui.gateHeadline.textContent = getGateGreetingText(mode);
 }
 
-// ---------- Main texts + audio based on mode ----------
-function setMainTextsAndAudio(mode, ctx) {
+// ---------- Main texts + audio ----------
+async function setMainTextsAndAudio(mode, ctx) {
   const sourceMsg = (() => {
     if (ctx.source === "online") return "تم جلب التاريخ أونلاين ✅";
     if (ctx.source === "device") return "لا يوجد إنترنت — تم استخدام تاريخ الجهاز ⚠️";
@@ -44,7 +44,7 @@ function setMainTextsAndAudio(mode, ctx) {
     ui.titleLine.textContent = "عيدكم مبارك 🎉";
     ui.nameLine.textContent = `كل عام وأنت بخير يا ${guestName}`;
     ui.statusLine.textContent = "عيد الفطر المبارك";
-    audio.switchTrackKeepPlaying(CONFIG.audio.eidFitr);
+    await audio.switchTrackKeepPlaying(CONFIG.audio.eidFitr);
     return;
   }
 
@@ -52,7 +52,7 @@ function setMainTextsAndAudio(mode, ctx) {
     ui.titleLine.textContent = "عيد الأضحى مبارك 🕋";
     ui.nameLine.textContent = `كل عام وأنت بخير يا ${guestName}`;
     ui.statusLine.textContent = "عيد الأضحى المبارك";
-    audio.switchTrackKeepPlaying(CONFIG.audio.eidAdha);
+    await audio.switchTrackKeepPlaying(CONFIG.audio.eidAdha);
     return;
   }
 
@@ -60,7 +60,7 @@ function setMainTextsAndAudio(mode, ctx) {
     ui.titleLine.textContent = "رمضان كريم 🌙";
     ui.nameLine.textContent = `كل رمضان وأنت طيب يا ${guestName}`;
     ui.statusLine.textContent = "المتبقي على عيد الفطر:";
-    audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
+    await audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
     return;
   }
 
@@ -68,7 +68,7 @@ function setMainTextsAndAudio(mode, ctx) {
     ui.titleLine.textContent = "تهنئة خاصة ✨";
     ui.nameLine.textContent = `كل رمضان وأنت طيب يا ${guestName}`;
     ui.statusLine.textContent = "المتبقي على عيد الأضحى:";
-    audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
+    await audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
     return;
   }
 
@@ -76,13 +76,14 @@ function setMainTextsAndAudio(mode, ctx) {
     ui.titleLine.textContent = "تهنئة خاصة ✨";
     ui.nameLine.textContent = `كل رمضان وأنت طيب يا ${guestName}`;
     ui.statusLine.textContent = "المتبقي على رمضان:";
-    audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
+    await audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
     return;
   }
 
   ui.titleLine.textContent = "تهنئة";
   ui.nameLine.textContent = `أهلًا يا ${guestName}`;
   ui.statusLine.textContent = "تعذر تحديد المناسبة حاليًا";
+  await audio.switchTrackKeepPlaying(CONFIG.audio.ramadan);
 }
 
 // ---------- Gate-only refresh (no audio touch) ----------
@@ -92,19 +93,19 @@ async function refreshGateOnly(){
   setGateHeadline(mode);
 }
 
-// ---------- Main refresh (updates mode + countdown target + audio) ----------
+// ---------- Main refresh ----------
 async function refreshMainMode(){
   const ctx = await getDateContext();
   const { mode, countdownToUtc } = computeMode(ctx);
 
-  // Gate headline can still reflect mode even after entering (optional)
   setGateHeadline(mode);
 
   countdownTargetUtc = countdownToUtc;
-  setMainTextsAndAudio(mode, ctx);
+  await setMainTextsAndAudio(mode, ctx);
 
   if (!countdownTargetUtc) {
     setCountdown(ui, { days: 0, hrs: 0, mins: 0, secs: 0 });
+
     if (ctx.source === "device" && ctx.targetSource === "none" && ui.sourceNote) {
       ui.sourceNote.textContent =
         "لا يوجد إنترنت ولا توجد تواريخ محفوظة — العدّاد الدقيق سيعمل بعد أول تشغيل أونلاين مرة واحدة.";
@@ -121,7 +122,7 @@ function refreshCountdown(){
   setCountdown(ui, msToParts(diff));
 }
 
-// ---------- Enter flow ----------
+// ---------- Enter ----------
 async function onEnter(){
   const nm = sanitizeName(ui.nameInput.value);
   if (!nm) {
@@ -134,18 +135,15 @@ async function onEnter(){
 
   showMain(ui);
 
-  // ✅ أهم سطرين: افتح وتشغيل الصوت داخل نفس الـ click gesture
-  // ثم بعد كده خليه يتحول تلقائيًا حسب المناسبة بدون قطع التشغيل
+  // ✅ تشغيل الصوت فورًا داخل نفس click gesture
   await audio.unlockAndStart(CONFIG.audio.ramadan);
 
   if (!mainStarted) {
     mainStarted = true;
 
-    // تحديث وضع المناسبة مرة فورًا ثم كل دقيقة
     await refreshMainMode();
     setInterval(refreshMainMode, CONFIG.loop.modeEveryMs);
 
-    // تحديث العداد كل ثانية
     refreshCountdown();
     setInterval(refreshCountdown, CONFIG.loop.countdownEveryMs);
   }
@@ -157,6 +155,6 @@ ui.nameInput.addEventListener("input", () => clearError(ui));
 ui.nameInput.addEventListener("keydown", (e) => { if (e.key === "Enter") onEnter(); });
 ui.audioBtn.addEventListener("click", () => audio.toggle());
 
-// ---------- Boot: update gate greeting immediately ----------
+// ---------- Boot ----------
 refreshGateOnly();
 setInterval(refreshGateOnly, CONFIG.loop.modeEveryMs);

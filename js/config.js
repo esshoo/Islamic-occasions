@@ -8,16 +8,14 @@ export const CONFIG = {
 
   hijri: {
     ramadan: { m: 9, d: 1 },
-    eidFitr: { m: 10, d: 1 },     // 1 Shawwal
-    eidAdha: { m: 12, d: 10 },    // 10 Dhul Hijjah
+    eidFitr: { m: 10, d: 1 },
+    eidAdha: { m: 12, d: 10 },
   },
 
-  // Online conversion API (AlAdhan)
-  // Docs/overview: base url https://api.aladhan.com/v1 :contentReference[oaicite:5]{index=5}
   api: {
     base: "https://api.aladhan.com/v1",
     timeoutMs: 4500,
-    hijriAdjustment: 0, // لو احتجت +1 أو -1 للسعودية
+    hijriAdjustment: 0, // +1 أو -1 لو احتجت
   },
 
   audio: {
@@ -27,9 +25,7 @@ export const CONFIG = {
   },
 
   loop: {
-    // تحديث حالة المناسبة (يحتاج نت): كل دقيقة
-    modeEveryMs: 60_000,
-    // تحديث العداد: كل ثانية محليًا
-    countdownEveryMs: 1000,
+    modeEveryMs: 60_000,       // تحديث الحالة كل دقيقة
+    countdownEveryMs: 1000,    // العداد كل ثانية
   },
 };

@@ -6,6 +6,24 @@
   <base href="./">
   <title>تهنئة المناسبات الإسلامية</title>
 
+  <!-- Social Preview / Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Islamic Occasions" />
+
+  <meta property="og:title" content="كل عام وأنتم بخير 🌙" />
+  <meta property="og:description" content="تهنئة ذكية + عدّاد للمناسبة القادمة (رمضان / عيد الفطر / عيد الأضحى) مع صوت وخلفية روحانية." />
+
+  <meta property="og:url" content="https://esshoo.github.io/Islamic-occasions/" />
+  <meta property="og:image" content="https://esshoo.github.io/Islamic-occasions/assets/og-image.png" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="كل عام وأنتم بخير 🌙" />
+  <meta name="twitter:description" content="تهنئة ذكية + عدّاد للمناسبة القادمة (رمضان / عيد الفطر / عيد الأضحى)." />
+  <meta name="twitter:image" content="https://esshoo.github.io/Islamic-occasions/assets/og-image.png" />
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Aref+Ruqaa+Ink:wght@400;700&display=swap" rel="stylesheet">
@@ -76,13 +94,14 @@
   <section id="main" class="screen" style="display:none;">
     <div class="panel fade-in">
       <div class="ornaments">
-        <!-- Garland + Sides (نفس الزينة اللي عملناها) -->
+        <!-- Top garland -->
         <svg class="garland" viewBox="0 0 1200 260" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
             <linearGradient id="g1" x1="0" y1="0" x2="1" y2="1">
               <stop offset="0" stop-color="#f3d389" stop-opacity=".95"/>
               <stop offset="1" stop-color="#d8b15a" stop-opacity=".65"/>
             </linearGradient>
+
             <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="b"/>
               <feMerge>
@@ -90,15 +109,19 @@
                 <feMergeNode in="SourceGraphic"/>
               </feMerge>
             </filter>
+
             <path id="wire" d="M 0 80 C 240 200, 460 10, 700 110 C 900 210, 1050 40, 1200 120" />
           </defs>
+
           <use href="#wire" fill="none" stroke="url(#g1)" stroke-width="3" opacity=".75"/>
+
           <g filter="url(#glow)" opacity=".95">
             <g id="lantern">
               <path d="M0 0 C 8 -10, 22 -10, 30 0 L26 40 C 26 52, 4 52, 4 40 Z" fill="url(#g1)" opacity=".9"/>
               <path d="M10 6 C 12 10, 18 10, 20 6" stroke="#0b1130" stroke-opacity=".55" stroke-width="2" fill="none"/>
               <circle cx="15" cy="-8" r="4" fill="url(#g1)"/>
             </g>
+
             <g transform="translate(140,120)">
               <line x1="15" y1="-52" x2="15" y2="-10" stroke="rgba(243,211,137,.65)" stroke-width="2"/>
               <use href="#lantern" x="0" y="0"/>
@@ -122,6 +145,7 @@
           </g>
         </svg>
 
+        <!-- Side patterns -->
         <svg class="side left" viewBox="0 0 180 900" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
           <defs>
             <linearGradient id="g2" x1="0" y1="0" x2="0" y2="1">
@@ -171,6 +195,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </section>
 

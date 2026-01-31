@@ -6,8 +6,9 @@ function abortableFetch(url, timeoutMs) {
   return fetch(url, { signal: controller.signal }).finally(() => clearTimeout(t));
 }
 
-// قراءة اليوم الهجري من الجهاز (بدون إنترنت) — غالبًا Umm al-Qura مع ar-SA :contentReference[oaicite:7]{index=7}
+// قراءة التاريخ الهجري من الجهاز (fallback)
 function getHijriFromDevice() {
+  // غالبًا ummalqura في ar-SA
   const fmt = new Intl.DateTimeFormat("ar-SA-u-ca-islamic-umalqura-nu-latn", {
     year: "numeric",
     month: "numeric",
@@ -40,7 +41,7 @@ function saveTargetsToCache(year, targets) {
   localStorage.setItem(cacheKey(year), JSON.stringify(targets));
 }
 
-// تحويل (هجري→ميلادي) باستخدام API
+// Hijri -> Gregorian (API)
 async function hToG(hDay, hMonth, hYear) {
   const dd = String(hDay).padStart(2, "0");
   const mm = String(hMonth).padStart(2, "0");
@@ -49,6 +50,7 @@ async function hToG(hDay, hMonth, hYear) {
   const url = `${CONFIG.api.base}/hToG/${dd}-${mm}-${yyyy}`;
   const res = await abortableFetch(url, CONFIG.api.timeoutMs);
   if (!res.ok) throw new Error("hToG failed");
+
   const json = await res.json();
   const g = json?.data?.gregorian;
 
@@ -59,15 +61,15 @@ async function hToG(hDay, hMonth, hYear) {
   };
 }
 
-// تحويل (ميلادي→هجري) لليوم الحالي
+// Gregorian(today in Riyadh) -> Hijri (API)
 async function gToH_Today() {
-  // نقرأ التاريخ الميلادي اليوم بتوقيت الرياض باستخدام Intl timeZone
   const fmt = new Intl.DateTimeFormat("en-CA", {
     timeZone: CONFIG.tz,
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   });
+
   const parts = fmt.formatToParts(new Date());
   const y = parts.find(p => p.type === "year").value;
   const m = parts.find(p => p.type === "month").value;
@@ -76,9 +78,10 @@ async function gToH_Today() {
   const url = `${CONFIG.api.base}/gToH/${d}-${m}-${y}?adjustment=${CONFIG.api.hijriAdjustment}`;
   const res = await abortableFetch(url, CONFIG.api.timeoutMs);
   if (!res.ok) throw new Error("gToH failed");
-  const json = await res.json();
 
+  const json = await res.json();
   const hijri = json?.data?.hijri;
+
   return {
     hYear: Number(hijri.year),
     hMonth: Number(hijri.month.number),
@@ -86,14 +89,14 @@ async function gToH_Today() {
   };
 }
 
-// Riyadh 00:00 -> UTC ms (Riyadh UTC+3)
+// Riyadh 00:00 -> UTC ms (Riyadh = UTC+3)
 function riyadhMidnightToUtcMs(gy, gm, gd) {
   return Date.UTC(gy, gm - 1, gd, 0, 0, 0) - (3 * 60 * 60 * 1000);
 }
 
 async function computeTargets(hYear) {
   const cached = loadTargetsFromCache(hYear);
-  if (cached) return { targets: cached, source: "cache" };
+  if (cached) return { targets: cached, targetSource: "cache" };
 
   const { ramadan, eidFitr, eidAdha } = CONFIG.hijri;
 
@@ -110,22 +113,21 @@ async function computeTargets(hYear) {
   };
 
   saveTargetsToCache(hYear, targets);
-  return { targets, source: "online" };
+  return { targets, targetSource: "online" };
 }
 
-// API أولًا، ثم Cache، ثم جهاز
+// Online first, then device + cache, else none
 export async function getDateContext() {
   try {
     const hijri = await gToH_Today();
-    const { targets, source: targetSource } = await computeTargets(hijri.hYear);
+    const { targets, targetSource } = await computeTargets(hijri.hYear);
     return { source: "online", hijri, targets, targetSource };
   } catch {
-    // fallback 1: try device hijri
     try {
       const hijri = getHijriFromDevice();
       const cached = loadTargetsFromCache(hijri.hYear);
+
       if (cached) return { source: "device", hijri, targets: cached, targetSource: "cache" };
-      // لا يوجد cache: سنرجع hijri فقط
       return { source: "device", hijri, targets: null, targetSource: "none" };
     } catch {
       return { source: "none", hijri: null, targets: null, targetSource: "none" };
